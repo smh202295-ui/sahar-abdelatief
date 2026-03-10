@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>محاكاة خطوات خوارزمية فرز القائمة </title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; text-align: center; background-color: #ffffff; padding: 20px; color: #000; }
+        .container { max-width: 900px; margin: auto; background: white; padding: 30px; border-radius: 15px; border: 2px solid #000; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        h2 { border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 30px; }
+        
+        .list-box { display: flex; flex-direction: column; align-items: center; margin: 40px 0; min-height: 120px; }
+        .list-container { display: flex; justify-content: center; gap: 25px; direction: ltr; }
+        
+        .item-wrapper { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+        .item { width: 75px; height: 75px; display: flex; align-items: center; justify-content: center; background-color: #fff; border: 3px solid #000; border-radius: 50%; font-size: 28px; font-weight: bold; transition: all 0.4s ease; color: #000; }
+        .index-tag { font-size: 15px; font-weight: bold; color: #000; background: #f1f5f9; padding: 3px 10px; border-radius: 5px; border: 1px solid #000; }
+        
+        /* ألوان التفاعل */
+        .key-active { background-color: #fbbf24 !important; border-color: #b45309 !important; transform: translateY(-15px); }
+        .comparing { background-color: #3b82f6 !important; color: #fff !important; }
+        .sorted { background-color: #e2e8f0; }
+
+        .controls { margin: 30px 0; display: flex; justify-content: center; gap: 15px; }
+        button { padding: 12px 30px; font-size: 18px; cursor: pointer; border: 2px solid #000; border-radius: 8px; font-weight: bold; color: #000; transition: 0.2s; }
+        
+        /* الترتيب الجديد للأزرار */
+        .btn-reset { background-color: #fee2e2; order: 3; } /* اليمين */
+        .btn-prev { background-color: #f1f5f9; order: 2; }  /* الوسط */
+        .btn-next { background-color: #d1fae5; order: 1; }  /* اليسار */
+
+        button:hover { filter: brightness(0.9); }
+        button:disabled { opacity: 0.3; cursor: not-allowed; }
+
+        .step-display { background: #fafafa; border: 2px solid #000; padding: 25px; text-align: right; font-size: 21px; line-height: 1.8; border-radius: 10px; min-height: 120px; }
+        
+        #final-steps { display: none; margin-top: 30px; text-align: right; border: 3px double #000; padding: 20px; background: #fff; border-radius: 10px; }
+        #final-steps li { margin-bottom: 8px; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>📋 محاكاة خطوات خوارزمية الفرز بالإدراج  لفرز القائمة:  [9, 2, 5] تصاعديًا</h2>
+    
+    <div class="list-box">
+        <div class="list-container" id="list-display"></div>
+    </div>
+
+    <div class="controls">
+        <button class="btn-reset" onclick="resetAll()">إعادة الضبط 🔄</button>
+        <button class="btn-prev" id="prevBtn" onclick="handlePrev()" disabled>السابق ⬅️</button>
+        <button class="btn-next" id="nextBtn" onclick="handleNext()">التالي ➡️</button>
+    </div>
+
+    <div class="step-display" id="info-text">اضغطي "التالي" لبدء الخطوة 1.</div>
+
+    <div id="final-steps">
+        <h3 style="text-decoration: underline;">✅ خطوات خوارزمية الفرز بالإدراج:</h3>
+        <ol>
+            <li>بداية الخوارزمية.</li>
+            <li>لنفترض أن العنصر الأول من القائمة قد تم فرزه.</li>
+            <li>قارن العنصر الثاني (حيث الفهرس index = 1) من القائمة بالعنصر الأول (حيث الفهرس index = 0).</li>
+            <li>انتقل إلى العنصر التالي (بفهرس index = 2) وقارنه بالعناصر ذات الفهرس 1 والفهرس 0.</li>
+            <li>إذا كانت العناصر على الجانب الأيمن أصغر من العناصر على الجانب الأيسر، قم بتبديلهما.</li>
+            <li>كرر القيام بهذه العملية وصولاً إلى نهاية المصفوفة.</li>
+            <li>نهاية الخوارزمية.</li>
+        </ol>
+    </div>
+</div>
+
+<script>
+    const originalData = [5, 2, 9];
+    let list = [...originalData];
+    let history = [];
+    let i = 1, j = 0, key = null;
+    let state = "SHOW_STEP1", isComparing = false;
+
+    const display = document.getElementById('list-display');
+    const info = document.getElementById('info-text');
+
+    function updateView() {
+        display.innerHTML = '';
+        list.forEach((val, idx) => {
+            let wrap = document.createElement('div');
+            wrap.className = 'item-wrapper';
+            let circle = document.createElement('div');
+            circle.className = 'item';
+            circle.innerText = val;
+            
+            if (idx < i) circle.classList.add('sorted');
+            if (key !== null && val === key && idx === (j + 1)) circle.classList.add('key-active');
+            if (isComparing && (idx === j || idx === j + 1)) circle.classList.add('comparing');
+
+            let tag = document.createElement('div');
+            tag.className = 'index-tag';
+            tag.innerText = `فهرس ${idx}`;
+            
+            wrap.appendChild(circle);
+            wrap.appendChild(tag);
+            display.appendChild(wrap);
+        });
+    }
+
+    function handleNext() {
+        history.push({ list: [...list], i, j, key, state, msg: info.innerHTML, isComparing });
+        document.getElementById('prevBtn').disabled = false;
+
+        switch (state) {
+            case "SHOW_STEP1":
+                info.innerHTML = "<b>الخطوة 1:</b> بداية الخوارزمية.";
+                state = "SHOW_STEP2";
+                break;
+            case "SHOW_STEP2":
+                info.innerHTML = `<b>الخطوة 2:</b> لنفترض أن العنصر الأول <b>(قيمته ${list[0]})</b> مرتب حالياً.`;
+                state = "SHOW_STEP3";
+                break;
+            case "SHOW_STEP3":
+                if (i < list.length) {
+                    key = list[i]; j = i - 1; isComparing = true;
+                    info.innerHTML = `<b>الخطوة 3:</b> قارن العنصر الثاني <b>(فهرس 1، قيمته ${key})</b> بالعنصر الأول <b>(فهرس 0، قيمته ${list[j]})</b>.`;
+                    state = "SHOW_STEP4";
+                } else { state = "SHOW_STEP7"; handleNext(); }
+                break;
+            case "SHOW_STEP4":
+                info.innerHTML = `<b>الخطوة 4:</b> انتقل للعنصر التالي <b>(${key})</b> وقارنه بما يسبقه (فهرس 1 و 0).`;
+                state = "SHOW_STEP5";
+                break;
+            case "SHOW_STEP5":
+                if (j >= 0 && list[j] > key) {
+                    info.innerHTML = `<b>الخطوة 5:</b> بما أن <b>(${key})</b> أصغر من <b>(${list[j]})</b>، يجب تبديلهما.`;
+                    state = "EXEC_STEP5";
+                } else {
+                    info.innerHTML = `<b>الخطوة 5:</b> لا يحتاج <b>(${key})</b> لتبديل لأنه استقر في مكانه الصحيح.`;
+                    isComparing = false; state = "SHOW_STEP6";
+                }
+                break;
+            case "EXEC_STEP5":
+                list[j + 1] = list[j]; list[j] = key; j--;
+                info.innerHTML = "<i>تم التبديل بنجاح. سنكمل الفحص..</i>";
+                state = "SHOW_STEP5";
+                break;
+            case "SHOW_STEP6":
+                info.innerHTML = "<b>الخطوة 6:</b> كرر العملية حتى نهاية القائمة.";
+                i++; key = null; isComparing = false;
+                state = (i < list.length) ? "SHOW_STEP3" : "SHOW_STEP7";
+                break;
+            case "SHOW_STEP7":
+                info.innerHTML = "<b>الخطوة 7:</b> نهاية الخوارزمية.";
+                document.getElementById('final-steps').style.display = 'block';
+                document.getElementById('nextBtn').disabled = true;
+                break;
+        }
+        updateView();
+    }
+
+    function handlePrev() {
+        if (history.length > 0) {
+            let last = history.pop();
+            list = last.list; i = last.i; j = last.j; key = last.key;
+            state = last.state; isComparing = last.isComparing;
+            info.innerHTML = last.msg;
+            if (history.length === 0) document.getElementById('prevBtn').disabled = true;
+            document.getElementById('nextBtn').disabled = false;
+            document.getElementById('final-steps').style.display = 'none';
+            updateView();
+        }
+    }
+
+    function resetAll() {
+        list = [...originalData]; i = 1; j = 0; key = null;
+        state = "SHOW_STEP1"; history = []; isComparing = false;
+        info.innerHTML = "اضغطي التالي للبدء..";
+        document.getElementById('nextBtn').disabled = false;
+        document.getElementById('prevBtn').disabled = true;
+        document.getElementById('final-steps').style.display = 'none';
+        updateView();
+    }
+    updateView();
+</script>
+</body>
+</html>
