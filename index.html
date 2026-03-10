@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>مرآة الإبداع - 25 تحدي</title>
+    <style>
+        :root { --qatar-maroon: #8D1B3D; --gold: #D4AF37; --dark: #0f0c29; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--dark); color: white; text-align: center; margin: 0; padding: 20px; }
+        .header { background: var(--qatar-maroon); padding: 15px; border-bottom: 4px solid var(--gold); border-radius: 15px; margin-bottom: 20px; }
+        .container { max-width: 800px; margin: auto; }
+        .step { display: none; }
+        .active { display: block !important; }
+        input, textarea { width: 85%; padding: 15px; margin: 15px 0; border-radius: 10px; border: 2px solid var(--gold); font-size: 1.1rem; text-align: center; }
+        button { background: var(--gold); color: black; padding: 12px 35px; border: none; border-radius: 50px; font-weight: bold; cursor: pointer; font-size: 1.1rem; }
+        
+        /* شبكة الـ 25 بطاقة */
+        .grid { 
+            display: grid; 
+            grid-template-columns: repeat(5, 1fr); 
+            gap: 10px; 
+            margin-top: 20px; 
+        }
+        .card-opt {
+            background: #1a1a2e; border: 1px solid var(--gold); border-radius: 8px;
+            height: 60px; display: flex; align-items: center; justify-content: center;
+            font-size: 1.2rem; cursor: pointer; transition: 0.3s;
+        }
+        .card-opt:hover { background: var(--qatar-maroon); transform: scale(1.1); z-index: 10; }
+        
+        #timer { font-size: 3rem; color: #ff4d4d; font-weight: bold; margin: 10px; }
+        #final-mirror {
+            background: linear-gradient(135deg, #1a1a2e 0%, #8D1B3D 100%);
+            border: 6px solid var(--gold); border-radius: 20px; padding: 30px; text-align: right;
+        }
+        .tag { background: var(--gold); color: black; padding: 5px 15px; border-radius: 5px; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <p style="margin:0; font-size: 0.9rem;">مدرسة عائشة بنت أبي بكر - قسم تكنولوجيا المعلومات</p>
+    <h1 style="margin:5px 0;">🪞 مرآة الإبداع.. أنتِ لها 🪞</h1>
+    <h2 style="margin:0; color:#D4AF37;">| 25 تحدي للقمة |</h2>
+</div>
+
+<div class="container">
+    <div id="step1" class="step active">
+        <h2>مرحباً بكِ يا مبدعة</h2>
+        <input type="text" id="studentName" placeholder="اكتبي اسمكِ هنا...">
+        <br><br><button onclick="goStep2()">ابدأ التحدي</button>
+    </div>
+
+    <div id="step2" class="step">
+        <h3>اختاري رقم البطاقة (1 - 25)</h3>
+        <div class="grid" id="cardsGrid"></div>
+    </div>
+
+    <div id="step3" class="step">
+        <div id="timer">03:00</div>
+        <div style="background: rgba(255,255,255,0.1); padding: 15px; border-radius: 10px; border-right: 5px solid #ff4d4d;">
+            <p style="margin:0; font-size: 0.9rem;">الفكرة السلبية المزعجة:</p>
+            <h3 id="currentChallenge"></h3>
+        </div>
+        <p style="margin-top:20px;">اكتبي فكرة إيجابية ذكية تهزمين بها هذا التحدي:</p>
+        <textarea id="positiveText" rows="3" placeholder="اكتبي هنا.."></textarea>
+        <br><button onclick="goFinal()">اعتماد البطاقة</button>
+    </div>
+
+    <div id="step4" class="step">
+        <div id="final-mirror">
+            <div style="display: flex; justify-content: space-between; border-bottom: 2px solid var(--gold); padding-bottom: 10px;">
+                <span class="tag">إبداع 2030</span>
+                <span id="outName"></span>
+            </div>
+            <p style="color: #ffbaba; margin-top: 20px;">الفكرة المهزومة ❌: <span id="outOld" style="text-decoration: line-through;"></span></p>
+            <div style="margin: 20px 0; background: rgba(0,0,0,0.3); padding: 20px; border-right: 6px solid var(--gold);">
+                <p style="color: var(--gold); margin:0;">فكرتي الإيجابية ✅:</p>
+                <h2 id="outNew" style="margin:10px 0;"></h2>
+            </div>
+            <p style="text-align: center;">بنت قطر.. طموح يعانق السماء 🇶🇦</p>
+        </div>
+        <br><button onclick="location.reload()">تحدي جديد</button>
+    </div>
+</div>
+
+<script>
+    const challenges = [
+        "المادة صعبة جداً ولن أفهمها", "الوقت ضيق ولن ألحق بالمهام", "أخشى من الوقوع في الخطأ أمام زميلاتي", "الآخرون دائماً أفضل مني",
+        "لا أشعر بالثقة عند التحدث أمام الجمهور", "درجاتي الأخيرة كانت محبطة", "أشعر أنني لا أملك موهبة تميزني", "القلق من الامتحانات يمنعني من التركيز",
+        "أخاف أن أفشل في تحقيق طموحي", "أشعر بالخجل من طرح الأسئلة", "التكنولوجيا معقدة جداً بالنسبة لي", "أعتقد أنني لا أستطيع تعلم لغة جديدة",
+        "أشعر بالملل بسرعة عند الدراسة", "رأي الناس بي يهمني أكثر من رأيي بنفسي", "أخاف من تجربة أشياء جديدة", "أشعر أن طموحاتي أكبر من قدراتي",
+        "لا أستطيع تنظيم وقتي بشكل صحيح", "أشعر بالضغط من كثرة الطلبات", "أخاف ألا أحقق توقعات والديّ", "أعتقد أن النجاح يحتاج لذكاء خارق فقط",
+        "أشعر بالإحباط عندما لا تنجح خطتي", "أخشى من النقد السلبي", "أشعر أنني وحيدة في مواجهة صعوباتي", "أعتقد أن الوقت قد فات للتغيير", "أخاف من المستقبل المجهول"
+    ];
+
+    let name = "";
+    let challenge = "";
+    let timeLeft = 180;
+    let timerId;
+
+    // توليد البطاقات الـ 25
+    const grid = document.getElementById('cardsGrid');
+    for(let i=1; i<=25; i++) {
+        let div = document.createElement('div');
+        div.className = 'card-opt';
+        div.innerText = i;
+        div.onclick = () => selectCard(challenges[i-1]);
+        grid.appendChild(div);
+    }
+
+    function goStep2() {
+        name = document.getElementById('studentName').value;
+        if(!name) return alert("ادخلي اسمكِ");
+        document.getElementById('step1').classList.remove('active');
+        document.getElementById('step2').classList.add('active');
+    }
+
+    function selectCard(text) {
+        challenge = text;
+        document.getElementById('currentChallenge').innerText = `"${text}"`;
+        document.getElementById('step2').classList.remove('active');
+        document.getElementById('step3').classList.add('active');
+        startTimer();
+    }
+
+    function startTimer() {
+        timerId = setInterval(() => {
+            timeLeft--;
+            let m = Math.floor(timeLeft/60);
+            let s = timeLeft%60;
+            document.getElementById('timer').innerText = (m<10?'0'+m:m)+":"+(s<10?'0'+s:s);
+            if(timeLeft <= 0) goFinal();
+        }, 1000);
+    }
+
+    function goFinal() {
+        const positive = document.getElementById('positiveText').value;
+        if(!positive) return alert("اكتبي فكرتكِ الإيجابية");
+        clearInterval(timerId);
+        document.getElementById('outName').innerText = name;
+        document.getElementById('outOld').innerText = challenge;
+        document.getElementById('outNew').innerText = positive;
+        document.getElementById('step3').classList.remove('active');
+        document.getElementById('step4').classList.add('active');
+    }
+</script>
+</body>
+</html>
