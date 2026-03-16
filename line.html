@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>محاكاة مفهوم البحث الخطي</title>
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --error: #e74c3c;
+            --success: #2ecc71;
+            --accent: #3498db;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+            background-color: #f4f7f6;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+        .game-card {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            max-width: 850px;
+            width: 100%;
+            text-align: center;
+        }
+        .grid {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin: 30px 0;
+            direction: ltr; /* لضمان الترتيب من اليسار لليمين برمجياً */
+        }
+        .box-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+        .box {
+            width: 75px;
+            height: 75px;
+            background-color: var(--accent);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 26px;
+            font-weight: bold;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .box.wrong-box { background-color: var(--error) !important; }
+        .box.correct-box { background-color: var(--success) !important; transform: scale(1.1); }
+        
+        .status-text { font-size: 14px; font-weight: bold; height: 20px; }
+        
+        #quiz-section {
+            display: none;
+            margin-top: 30px;
+            padding: 25px;
+            background: #fff;
+            border: 2px solid var(--accent);
+            border-radius: 15px;
+            text-align: right;
+        }
+
+        .quiz-item { margin-bottom: 20px; padding: 15px; background: #f9f9f9; border-radius: 10px; }
+        .quiz-item p { font-weight: 600; color: var(--primary); margin-bottom: 10px; line-height: 1.6; }
+        .quiz-item select { padding: 10px; border-radius: 5px; width: 100%; border: 1px solid #ccc; font-family: inherit; font-size: 15px; }
+
+        #overlay {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85); z-index: 1000; justify-content: center; align-items: center;
+        }
+        .modal { background: white; padding: 30px; border-radius: 15px; text-align: center; max-width: 450px; }
+        .reset-btn { background: var(--primary); color: white; padding: 12px 25px; border: none; border-radius: 8px; cursor: pointer; margin-top: 20px; font-size: 16px; }
+        
+        #conclusion {
+            display: none;
+            background: #d4edda;
+            padding: 20px;
+            border-radius: 10px;
+            color: #155724;
+            line-height: 1.8;
+            font-size: 18px;
+            text-align: center;
+            border: 2px solid #c3e6cb;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="game-card">
+    <h2 style="color: var(--primary);">نشاط استكشاف مفهوم البحث الخطي</h2>
+    <p>ساعدي الحاسب في العثور على القيمة المطلوبة داخل الذاكرة باتباع المسار الصحيح.</p>
+
+    <div style="background: #e1f5fe; padding: 15px; border-radius: 10px; margin: 20px 0; border: 1px solid #b3e5fc;">
+        الرقم المستهدف للبحث: <strong id="target-num" style="font-size: 32px; color: var(--accent);">?</strong>
+    </div>
+
+    <div id="grid" class="grid"></div>
+
+    <button class="reset-btn" onclick="initGame()">إعادة ضبط النشاط</button>
+
+    <div id="quiz-section">
+        <h3 style="color: var(--accent); text-align: center; border-bottom: 2px solid #eee; padding-bottom: 10px;">أسئلة استنتاجية</h3>
+        
+        <div class="quiz-item">
+            <p>1. بناءً على المحاكاة، كيف ينتقل البحث الخطي بين عناصر القائمة؟</p>
+            <select onchange="checkAnswer(this, 'correct')">
+                <option value="">-- اختاري الإجابة --</option>
+                <option value="correct">يفحص العناصر واحداً تلو الآخر بالترتيب</option>
+                <option value="wrong">يقفز مباشرة إلى منتصف القائمة</option>
+            </select>
+        </div>
+
+        <div class="quiz-item">
+            <p>2. ماذا حدث عندما ضغطتِ على صندوق لا يحتوي على الرقم المطلوب؟</p>
+            <select onchange="checkAnswer(this, 'correct')">
+                <option value="">-- اختاري الإجابة --</option>
+                <option value="wrong">توقف البرنامج عن العمل تماماً</option>
+                <option value="correct">ظهرت القيمة False وتحول اللون للأحمر واستمر البحث</option>
+            </select>
+        </div>
+
+        <div class="quiz-item">
+            <p>3. متى توقفت عملية البحث في المحاكاة السابقة؟</p>
+            <select onchange="checkAnswer(this, 'correct')">
+                <option value="">-- اختاري الإجابة --</option>
+                <option value="correct">عند العثور على الرقم المطلوب وظهور القيمة True</option>
+                <option value="wrong">بمجرد فتح أول صندوق عشوائي</option>
+            </select>
+        </div>
+
+        <div id="conclusion">
+            <strong>💡 الخلاصة الاستنتاجية:</strong><br>
+            يتحقق البحث الخطي من جميع عناصر القائمة واحدة تلو الأخرى بدءًا من العنصر الأول، وإذا تم العثور على العنصر الذي نبحث عنه ترجع القيمة True وإلا ترجع القيمة False.
+        </div>
+    </div>
+</div>
+
+<div id="overlay">
+    <div class="modal">
+        <h2 style="color:var(--error)">تنبيه: التزمي بالتسلسل!</h2>
+        <p>البحث الخطي يعتمد على الترتيب. لا يمكنك فحص الصندوق الحالي قبل فحص الصناديق التي تسبقه من جهة اليسار.</p>
+        <button onclick="closeModal()" class="reset-btn">سألتزم بالمسار الخطي</button>
+    </div>
+</div>
+
+<audio id="error-sound" src="https://www.soundjay.com/buttons/beep-10.mp3"></audio>
+
+<script>
+    let target;
+    let currentIndex = 0;
+    const boxCount = 8;
+    let numbers = [];
+
+    function initGame() {
+        const grid = document.getElementById('grid');
+        grid.innerHTML = '';
+        currentIndex = 0;
+        document.getElementById('quiz-section').style.display = 'none';
+        document.getElementById('conclusion').style.display = 'none';
+        
+        // توليد أرقام عشوائية فريدة
+        numbers = [];
+        while(numbers.length < boxCount) {
+            let r = Math.floor(Math.random() * 99) + 1;
+            if(numbers.indexOf(r) === -1) numbers.push(r);
+        }
+        
+        // ضمان أن الهدف ليس في أول صندوقين لتعزيز الاستنتاج
+        const targetPos = Math.floor(Math.random() * (boxCount - 3)) + 3; 
+        target = numbers[targetPos];
+        
+        document.getElementById('target-num').innerText = target;
+
+        numbers.forEach((num, index) => {
+            const container = document.createElement('div');
+            container.className = 'box-container';
+            container.innerHTML = `
+                <div class="status-text" id="status-${index}"></div>
+                <div class="box" id="box-${index}" onclick="handleBox(${index}, ${num})">?</div>
+            `;
+            grid.appendChild(container);
+        });
+    }
+
+    function handleBox(index, num) {
+        if (index !== currentIndex) {
+            document.getElementById('overlay').style.display = 'flex';
+            document.getElementById('error-sound').play();
+            return;
+        }
+
+        const box = document.getElementById(`box-${index}`);
+        const status = document.getElementById(`status-${index}`);
+        box.innerText = num;
+
+        if (num === target) {
+            box.classList.add('correct-box');
+            status.innerText = "(True)مطابق";
+            status.style.color = "var(--success)";
+            finishGame();
+        } else {
+            box.classList.add('wrong-box');
+            status.innerText = "(False)غير مطابق";
+            status.style.color = "var(--error)";
+            currentIndex++;
+        }
+    }
+
+    function finishGame() {
+        document.querySelectorAll('.box').forEach(b => b.onclick = null);
+        setTimeout(() => {
+            document.getElementById('quiz-section').style.display = 'block';
+            window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+        }, 500);
+    }
+
+    function checkAnswer(el, type) {
+        if (el.value === 'correct') {
+            el.style.borderColor = "var(--success)";
+            el.style.backgroundColor = "#f0fff4";
+        } else {
+            el.style.borderColor = "var(--error)";
+            el.style.backgroundColor = "#fff5f5";
+        }
+
+        const selects = document.querySelectorAll('#quiz-section select');
+        const allCorrect = Array.from(selects).every(s => s.value === 'correct');
+        if (allCorrect) {
+            document.getElementById('conclusion').style.display = 'block';
+        }
+    }
+
+    function closeModal() { document.getElementById('overlay').style.display = 'none'; }
+
+    initGame();
+</script>
+
+</body>
+</html>
