@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>محاكاة خوارزمية البحث الخطي التفاعلية</title>
+    <style>
+        :root {
+            --primary: #2e7d32;
+            --error: #d32f2f;
+            --accent: #ff9800;
+            --bg: #fdfdfd;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg);
+            display: flex;
+            justify-content: center;
+            padding: 20px;
+            margin: 0;
+        }
+        .container {
+            max-width: 850px;
+            width: 100%;
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            text-align: center;
+            position: relative;
+        }
+        
+        .target-header {
+            background: #fff3e0;
+            border: 2px solid var(--accent);
+            padding: 15px;
+            border-radius: 15px;
+            margin-bottom: 50px; /* مساحة إضافية للفقاعات */
+            font-size: 1.4rem;
+            display: inline-block;
+            min-width: 300px;
+        }
+        .target-number {
+            background: var(--accent);
+            color: white;
+            padding: 2px 15px;
+            border-radius: 8px;
+            font-weight: bold;
+        }
+
+        /* فقاعة التوجيه فوق العناصر */
+        .bubble {
+            position: absolute;
+            background: #333;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 10px;
+            font-size: 0.95rem;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            margin-bottom: 15px;
+            width: 180px;
+            display: none;
+            z-index: 10;
+            line-height: 1.4;
+        }
+        .bubble::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -8px;
+            border-width: 8px;
+            border-style: solid;
+            border-color: #333 transparent transparent transparent;
+        }
+
+        .list-wrapper {
+            display: flex;
+            justify-content: center;
+            gap: 25px;
+            margin: 60px 0 30px 0;
+            direction: ltr;
+        }
+        .box-container { position: relative; }
+
+        .box {
+            width: 75px;
+            height: 75px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f0f0f0;
+            border: 3px solid #ddd;
+            border-radius: 12px;
+            font-size: 1.7rem;
+            font-weight: bold;
+            transition: all 0.4s ease;
+            pointer-events: none;
+        }
+
+        .box.glow {
+            border-color: #4caf50;
+            background: #e8f5e9;
+            box-shadow: 0 0 20px #4caf50;
+            transform: scale(1.1);
+            pointer-events: auto;
+            cursor: pointer;
+        }
+
+        .box.fail { background: #ffebee; border-color: var(--error); color: var(--error); transform: scale(1); }
+        .box.match { background: var(--primary); border-color: #1b5e20; color: white; box-shadow: 0 0 20px var(--primary); }
+
+        .steps-container { text-align: right; margin-top: 30px; border-top: 2px solid #eee; padding-top: 20px; }
+        .step {
+            background: #f1f8e9;
+            padding: 10px 15px;
+            margin-bottom: 8px;
+            border-right: 6px solid var(--primary);
+            border-radius: 5px;
+            display: none;
+            animation: slideIn 0.4s forwards;
+        }
+
+        @keyframes slideIn { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
+
+        button#startBtn {
+            padding: 12px 35px;
+            font-size: 1.1rem;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>محاكاة استنتاج خطوات البحث الخطي 🔍</h2>
+
+    <div class="target-header">
+        الهدف المطلوب إيجاده: <span class="target-number">7</span>
+    </div>
+
+    <br>
+    <button id="startBtn" onclick="startSim()">ابدأ المهمة</button>
+
+    <div class="list-wrapper">
+        <div class="box-container">
+            <div id="bubble0" class="bubble"></div>
+            <div class="box" id="b0">15</div>
+        </div>
+        <div class="box-container">
+            <div id="bubble1" class="bubble"></div>
+            <div class="box" id="b1">3</div>
+        </div>
+        <div class="box-container">
+            <div id="bubble2" class="bubble"></div>
+            <div class="box" id="b2">7</div>
+        </div>
+        <div class="box-container">
+            <div id="bubble3" class="bubble"></div>
+            <div class="box" id="b3">22</div>
+        </div>
+    </div>
+
+    <div class="steps-container">
+        <div class="step" id="s1">1. بداية الخوارزمية.</div>
+        <div class="step" id="s2">2. اقرأ العنصر المراد البحث عنه من المستخدم.</div>
+        <div class="step" id="s3">3. قارن بين عنصر البحث مع أول عنصر بالقائمة.</div>
+        <div class="step" id="s4">4. إذا لم يتطابق العنصران، قارن عنصر البحث مع العنصر التالي في القائمة.</div>
+        <div class="step" id="s5">5. كرر الخطوات حتى تصل إلى نهاية القائمة.</div>
+        <div class="step" id="s6">6. إذا تطابق العنصران، أرجع قيمة True.</div>
+        <div class="step" id="s7">7. نهاية الخوارزمية.</div>
+    </div>
+</div>
+
+<script>
+    const target = 7;
+
+    function showStep(id) {
+        document.getElementById('s' + id).style.display = 'block';
+    }
+
+    function startSim() {
+        document.getElementById('startBtn').style.display = 'none';
+        showStep(1);
+        setTimeout(() => {
+            showStep(2);
+            showStep(3);
+            activate(0, "قارني الآن: هل 15 تساوي 7؟");
+        }, 600);
+    }
+
+    function activate(idx, msg) {
+        const box = document.getElementById('b' + idx);
+        const bubble = document.getElementById('bubble' + idx);
+        box.classList.add('glow');
+        bubble.innerText = msg;
+        bubble.style.display = 'block';
+        box.onclick = () => check(idx);
+    }
+
+    function check(idx) {
+        const box = document.getElementById('b' + idx);
+        const bubble = document.getElementById('bubble' + idx);
+        const val = parseInt(box.innerText);
+
+        box.classList.remove('glow');
+        box.onclick = null;
+
+        if (val === target) {
+            box.classList.add('match');
+            bubble.innerText = "رائع! 7 تساوي 7. وجدنا الهدف!";
+            showStep(6);
+            showStep(7);
+            
+            const restart = document.createElement('button');
+            restart.innerText = "إعادة التجربة";
+            restart.style.marginTop = "20px";
+            restart.id = "startBtn";
+            restart.onclick = () => location.reload();
+            document.querySelector('.container').appendChild(restart);
+        } else {
+            box.classList.add('fail');
+            bubble.innerText = `بما أن ${val} لا تساوي 7، اقرأي الخطوة رقم ${idx === 0 ? '4' : '5'}`;
+            
+            if (idx === 0) showStep(4);
+            if (idx === 1) showStep(5);
+
+            setTimeout(() => {
+                bubble.style.display = 'none';
+                if (idx < 3) activate(idx + 1, `انتقلنا للتالي، هل ${document.getElementById('b'+(idx+1)).innerText} تساوي 7؟`);
+            }, 2500); // تترك الرسالة للطالبة لمدة ثانيتين ونصف قبل الانتقال
+        }
+    }
+</script>
+
+</body>
+</html>
